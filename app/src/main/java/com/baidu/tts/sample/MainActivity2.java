@@ -1,4 +1,7 @@
-package com.ykai.engbot;
+/**
+ * Copyright (C) 2015 Baidu, Inc. All Rights Reserved.
+ */
+package com.baidu.tts.sample;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -15,38 +18,36 @@ import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.baidu.android.voicedemo.activity.ActivityMain;
 import com.baidu.tts.auth.AuthInfo;
 import com.baidu.tts.client.SpeechError;
+import com.baidu.tts.client.SpeechSynthesizeBag;
 import com.baidu.tts.client.SpeechSynthesizer;
 import com.baidu.tts.client.SpeechSynthesizerListener;
 import com.baidu.tts.client.SynthesizerTool;
 import com.baidu.tts.client.TtsMode;
-import com.baidu.tts.sample.MainActivity;
-import com.baidu.tts.sample.MainActivity2;
-import com.ykai.englishdialog.myapplication.ChatMainActivity;
-import com.ykai.englishdialog.myapplication.ChatUtil;
+import com.ykai.engbot.R;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * 取保手机有网
- * Created by ykai on 17/9/16.
+ * @author liweigao 2015年9月15日
  */
-public class HomeActivity extends Activity implements View.OnClickListener, SpeechSynthesizerListener {
-
-//    private Button btnTTS;
-//    private EditText editText;
-//    private TextView textView;
+public class MainActivity2 extends Activity implements OnClickListener, SpeechSynthesizerListener {
+    private Button mSpeak;
+    private EditText mInput;
+    private TextView mShowText;
 
     private SpeechSynthesizer mSpeechSynthesizer;
     private String mSampleDirPath;
@@ -62,83 +63,18 @@ public class HomeActivity extends Activity implements View.OnClickListener, Spee
     private static final int PRINT = 0;
     private static final int UI_CHANGE_INPUT_TEXT_SELECTION = 1;
     private static final int UI_CHANGE_SYNTHES_TEXT_SELECTION = 2;
+    private static final String TAG = "ChatMainActivity";
 
-
-    private Activity _this;
-
-    EditText editText;
-    TextView textView;
-
-    Button btnVoice;
-    Button btnTTS;
-    Button btnChat;
-
-
-    private String TAG = "yyk";
-
-
+    /*
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.home_activity);
-        _this = this;
-
-
-        editText = (EditText) findViewById(R.id.edit);
-        textView = (TextView) findViewById(R.id.text);
-
-        btnVoice = (Button) findViewById(R.id.voice_2_txt_btn);
-        btnChat = (Button) findViewById(R.id.chat_btn);
-        btnTTS = (Button) findViewById(R.id.txt_2_voice_btn);
-
+        setContentView(R.layout.activity_main2);
         initialEnv();
         initialView();
         initialTts();
-
-
-        btnVoice.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                Intent intent = new Intent(_this, ActivityMain.class);
-                startActivity(intent);
-            }
-        });
-
-        btnChat.setOnClickListener(new View.OnClickListener() {
-                                       @Override
-                                       public void onClick(View view) {
-
-                                           new Thread(new Runnable() {
-                                               @Override
-                                               public void run() {
-
-
-                                                   String strParam = editText.getText().toString();
-
-                                                   ChatUtil.iCallBack = new ChatUtil.ICallBack() {
-                                                       @Override
-                                                       public void onSmartChatBack(String s) {
-
-
-                                                           Log.d(TAG, "onSmartChatBack: " + s);
-                                                           Message message = new Message();
-                                                           message.obj = s;
-                                                           message.what = 100111;
-                                                           mHandler.sendMessage(message);
-
-                                                       }
-                                                   };
-                                                   ChatUtil.getEnglistReturn(strParam);
-
-                                               }
-                                           }).start();
-
-                                       }
-                                   }
-
-        );
-
     }
 
     private void initialEnv() {
@@ -211,8 +147,11 @@ public class HomeActivity extends Activity implements View.OnClickListener, Spee
     }
 
     private void initialView() {
-        this.btnTTS.setOnClickListener(this);
-        this.textView.setMovementMethod(new ScrollingMovementMethod());
+        this.mSpeak = (Button) this.findViewById(R.id.speak);
+        this.mSpeak.setOnClickListener(this);
+        this.mInput = (EditText) this.findViewById(R.id.input);
+        this.mShowText = (TextView) this.findViewById(R.id.showText);
+        this.mShowText.setMovementMethod(new ScrollingMovementMethod());
     }
 
     private void initialTts() {
@@ -277,7 +216,7 @@ public class HomeActivity extends Activity implements View.OnClickListener, Spee
     public void onClick(View v) {
         int id = v.getId();
         switch (id) {
-            case R.id.txt_2_voice_btn:
+            case R.id.speak:
                 speak();
                 break;
 
@@ -300,11 +239,11 @@ public class HomeActivity extends Activity implements View.OnClickListener, Spee
 
 
     private void speak() {
-        String text = this.editText.getText().toString();
+        String text = this.mInput.getText().toString();
         //需要合成的文本text的长度不能超过1024个GBK字节。
-        if (TextUtils.isEmpty(editText.getText())) {
+        if (TextUtils.isEmpty(mInput.getText())) {
             text = "欢迎使用百度语音合成SDK,百度语音为你提供支持。";
-            editText.setText(text);
+            mInput.setText(text);
         }
         int result = this.mSpeechSynthesizer.speak(text);
         if (result < 0) {
@@ -401,25 +340,17 @@ public class HomeActivity extends Activity implements View.OnClickListener, Spee
                     print(msg);
                     break;
                 case UI_CHANGE_INPUT_TEXT_SELECTION:
-                    if (msg.arg1 <= editText.getText().length()) {
-                        editText.setSelection(0, msg.arg1);
+                    if (msg.arg1 <= mInput.getText().length()) {
+                        mInput.setSelection(0, msg.arg1);
                     }
                     break;
                 case UI_CHANGE_SYNTHES_TEXT_SELECTION:
-                    SpannableString colorfulText = new SpannableString(editText.getText().toString());
+                    SpannableString colorfulText = new SpannableString(mInput.getText().toString());
                     if (msg.arg1 <= colorfulText.toString().length()) {
                         colorfulText.setSpan(new ForegroundColorSpan(Color.GRAY), 0, msg.arg1, Spannable
                                 .SPAN_EXCLUSIVE_EXCLUSIVE);
-                        editText.setText(colorfulText);
+                        mInput.setText(colorfulText);
                     }
-                    break;
-                case 100111:
-                    if (null != msg.obj) {
-                        textView.setText("" + msg.obj.toString());
-                    } else {
-                        textView.setText("null");
-                    }
-
                     break;
                 default:
                     break;
@@ -447,17 +378,16 @@ public class HomeActivity extends Activity implements View.OnClickListener, Spee
         Spannable colorMessage = new SpannableString(message + "\n");
         colorMessage.setSpan(new ForegroundColorSpan(0xff0000ff), 0, message.length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        textView.append(colorMessage);
-        Layout layout = textView.getLayout();
+        mShowText.append(colorMessage);
+        Layout layout = mShowText.getLayout();
         if (layout != null) {
-            int scrollAmount = layout.getLineTop(textView.getLineCount()) - textView.getHeight();
+            int scrollAmount = layout.getLineTop(mShowText.getLineCount()) - mShowText.getHeight();
             if (scrollAmount > 0) {
-                textView.scrollTo(0, scrollAmount + textView.getCompoundPaddingBottom());
+                mShowText.scrollTo(0, scrollAmount + mShowText.getCompoundPaddingBottom());
             } else {
-                textView.scrollTo(0, 0);
+                mShowText.scrollTo(0, 0);
             }
         }
     }
-
 
 }

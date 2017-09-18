@@ -16,9 +16,9 @@
         android:targetSdkVersion="25" />
 
     <!--<instrumentation-->
-        <!--android:name="android.test.InstrumentationTestRunner"-->
-        <!--android:label="Tests for com.baidu.speech.recognizerdemo"-->
-        <!--android:targetPackage="com.ykai.engbot" />-->
+    <!--android:name="android.test.InstrumentationTestRunner"-->
+    <!--android:label="Tests for com.baidu.speech.recognizerdemo"-->
+    <!--android:targetPackage="com.ykai.engbot" />-->
     <!--android:targetPackage="com.baidu.speech.recognizerdemo" />-->
     <!-- begin: baidu speech sdk  权限 -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -89,15 +89,9 @@
         <activity android:name="com.ykai.englishdialog.myapplication.ChatMainActivity"></activity>
 
 
-
         <!-- TTS begin -->
-        <activity android:name="com.baidu.tts.sample.MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+        <activity android:name="com.baidu.tts.sample.MainActivity"></activity>
+        <activity android:name="com.baidu.tts.sample.MainActivity2"></activity>
         <activity android:name="com.baidu.tts.sample.ModelManagerActivity"></activity>
         <!-- TTS end -->
 

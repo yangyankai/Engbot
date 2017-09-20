@@ -135,33 +135,12 @@ public class HomeActivity extends Activity implements View.OnClickListener, Spee
         setting = (Button) findViewById(R.id.voice_settings);
 
 
-
-
         btnChat.setOnClickListener(new View.OnClickListener() {
                                        @Override
                                        public void onClick(View view) {
 
-                                           new Thread(new Runnable() {
-                                               @Override
-                                               public void run() {
-                                                   String strParam = editText.getText().toString();
-                                                   ChatUtil.iCallBack = new ChatUtil.ICallBack() {
-                                                       @Override
-                                                       public void onSmartChatBack(String s) {
+                                           translate();
 
-
-                                                           Log.d(TAG, "onSmartChatBack: " + s);
-                                                           Message message = new Message();
-                                                           message.obj = s;
-                                                           message.what = 100111;
-                                                           mHandler.sendMessage(message);
-
-                                                       }
-                                                   };
-                                                   ChatUtil.getEnglistReturn(strParam);
-
-                                               }
-                                           }).start();
 
                                        }
                                    }
@@ -196,6 +175,31 @@ public class HomeActivity extends Activity implements View.OnClickListener, Spee
         initRecog();
 
         // Voice end
+    }
+
+    private void translate() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String strParam = editText.getText().toString();
+                ChatUtil.iCallBack = new ChatUtil.ICallBack() {
+                    @Override
+                    public void onSmartChatBack(String s) {
+
+
+                        Log.d(TAG, "onSmartChatBack: " + s);
+                        Message message = new Message();
+                        message.obj = s;
+                        message.what = 100111;
+                        mHandler.sendMessage(message);
+
+                    }
+                };
+                ChatUtil.getEnglistReturn(strParam);
+
+            }
+        }).start();
+
     }
 
     // HomeActivity begin
@@ -456,6 +460,16 @@ public class HomeActivity extends Activity implements View.OnClickListener, Spee
             super.handleMessage(msg);
             int what = msg.what;
             switch (what) {
+
+                case 100111:
+                    if (null != msg.obj) {
+                        editText.setText("" + msg.obj.toString());
+                        //textView.setText("" + msg.obj.toString());
+                    } else {
+                        textView.setText("null");
+                    }
+                    speak();
+                    break;
                 case PRINT:
                     print(msg);
                     break;
@@ -472,14 +486,7 @@ public class HomeActivity extends Activity implements View.OnClickListener, Spee
                         editText.setText(colorfulText);
                     }
                     break;
-                case 100111:
-                    if (null != msg.obj) {
-                        textView.setText("" + msg.obj.toString());
-                    } else {
-                        textView.setText("null");
-                    }
 
-                    break;
                 default:
                     break;
             }
@@ -529,8 +536,11 @@ public class HomeActivity extends Activity implements View.OnClickListener, Spee
         }
         switch (msg.what) { // 处理MessageStatusRecogListener中的状态回调
             case STATUS_FINISHED:
-                if (msg.arg2 == 1)
+                if (msg.arg2 == 1) {
                     editText.setText(msg.obj.toString());
+                    translate();
+//                    toPrint("recognize finished !");
+                }
                 //故意不写break
             case STATUS_NONE:
             case STATUS_READY:
@@ -560,33 +570,41 @@ public class HomeActivity extends Activity implements View.OnClickListener, Spee
 
             @Override
             public void onClick(View v) {
-                switch (status) {
-                    case STATUS_NONE: // 初始状态
-                        start();
-                        status = STATUS_WAITING_READY;
-                        updateBtnTextByStatus();
-                        textView.setText("");
-                        editText.setText("");
-                        break;
-                    case STATUS_WAITING_READY: // 调用本类的start方法后，即输入START事件后，等待引擎准备完毕。
-                    case STATUS_READY: // 引擎准备完毕。
-                    case STATUS_SPEAKING:
-                    case STATUS_FINISHED:// 长语音情况
-                    case STATUS_RECOGNITION:
-                        stop();
-                        status = STATUS_STOPPED; // 引擎识别中
-                        updateBtnTextByStatus();
-                        break;
-                    case STATUS_STOPPED: // 引擎识别中
-                        cancel();
-                        status = STATUS_NONE; // 识别结束，回到初始状态
-                        updateBtnTextByStatus();
-                        break;
-                }
+
+                beginTalk();
+
 
             }
         });
 
+
+    }
+
+    private void beginTalk() {
+
+        switch (status) {
+            case STATUS_NONE: // 初始状态
+                start();
+                status = STATUS_WAITING_READY;
+                updateBtnTextByStatus();
+                textView.setText("");
+                editText.setText("");
+                break;
+            case STATUS_WAITING_READY: // 调用本类的start方法后，即输入START事件后，等待引擎准备完毕。
+            case STATUS_READY: // 引擎准备完毕。
+            case STATUS_SPEAKING:
+            case STATUS_FINISHED:// 长语音情况
+            case STATUS_RECOGNITION:
+                stop();
+                status = STATUS_STOPPED; // 引擎识别中
+                updateBtnTextByStatus();
+                break;
+            case STATUS_STOPPED: // 引擎识别中
+                cancel();
+                status = STATUS_NONE; // 识别结束，回到初始状态
+                updateBtnTextByStatus();
+                break;
+        }
 
     }
 
